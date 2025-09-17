@@ -20,6 +20,8 @@ build-app:
   only:
     - release
     - feature/cicd-pipeline
+  tags:
+    - docker
 
 dockerize-and-push:
   stage: dockerize
@@ -42,3 +44,5 @@ dockerize-and-push:
     - echo "Image push complete."
   only:
     - release
+  tags:
+    - docker
