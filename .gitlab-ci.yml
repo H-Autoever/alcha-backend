@@ -21,7 +21,7 @@ build-app:
     - release
     - feature/cicd-pipeline
   tags:
-    - docker
+    - shell
 
 dockerize-and-push:
   stage: dockerize
@@ -45,4 +45,4 @@ dockerize-and-push:
   only:
     - release
   tags:
-    - docker
+    - shell
