@@ -40,7 +40,7 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, RealtimeAppDataMessage> kafkaListenerContainerFactory() { // kafka는 kafkaListenerContainerFactory 라는 이름으로 Bean을 자동으로 등록하기 때문에 다른 이름을 쓰려면 @KafkaListener에 containerFactory = "orderKafkaListenerContainerFactory" 이렇게 명시해야 함
+    public ConcurrentKafkaListenerContainerFactory<String, RealtimeAppDataMessage> realtimeAppDataListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, RealtimeAppDataMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(realtimeAppDataConsumerFactory());
         return factory;
@@ -64,7 +64,7 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, PeriodicAppDataMessage> periodicKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, PeriodicAppDataMessage> periodicAppDataListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, PeriodicAppDataMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(periodicAppDataConsumerFactory());
