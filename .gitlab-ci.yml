@@ -19,6 +19,7 @@ build-app:
     expire_in: 1 hour
   only:
     - release
+    - feature/cicd-pipeline
 
 dockerize-and-push:
   stage: dockerize
