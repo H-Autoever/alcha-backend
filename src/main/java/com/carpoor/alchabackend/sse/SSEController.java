@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
  * front와 실시간 데이터 통신 
  */
 @RestController
+@CrossOrigin(origins = "*")
 public class SseController {
     
     // front와 연결할 엔드포인트
@@ -26,6 +27,16 @@ public class SseController {
         // 연결 타임아웃 시 로그 출력
         emitter.onTimeout(() -> System.out.println("SSE 연결 타임아웃: " + vehicleId));
         
+        // 연결 즉시 테스트 데이터 전송
+        try {
+            emitter.send(SseEmitter.event()
+                .name("test")
+                .data("SSE 연결 성공! 차량 ID: " + vehicleId));
+        } catch (Exception e) {
+            System.out.println("테스트 데이터 전송 실패: " + e.getMessage());
+        }
+        
         return emitter;
     }
 }
+
