@@ -21,7 +21,7 @@ build-app:
     - release
     - feature/cicd-pipeline
   tags:
-    - alcha
+    - alcha # tag는 and 연산
 
 dockerize-and-push:
   stage: dockerize
