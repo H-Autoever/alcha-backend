@@ -111,6 +111,11 @@
 
             // 데이터 수신
             eventSource.onmessage = function(event) {
+                // 기존 텍스트 제거 (첫 번째 데이터만)
+                if (dataContainer.querySelector('p')) {
+                    dataContainer.innerHTML = '';
+                }
+                
                 const dataDiv = document.createElement('div');
                 dataDiv.className = 'data';
                 dataDiv.innerHTML = `
