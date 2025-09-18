@@ -21,7 +21,6 @@ build-app:
     - release
     - feature/cicd-pipeline
   tags:
-    - test
     - alcha
 
 dockerize-and-push:
@@ -46,5 +45,4 @@ dockerize-and-push:
   only:
     - release
   tags:
-    - test
-    - alcha
+    - alcha # tag는 and 연산
