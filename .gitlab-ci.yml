@@ -44,5 +44,6 @@ dockerize-and-push:
     - echo "Image push complete."
   only:
     - release
+    - feature/cicd-pipeline
   tags:
     - alcha # tag는 and 연산
