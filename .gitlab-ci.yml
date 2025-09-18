@@ -30,6 +30,7 @@ dockerize-and-push:
     - docker:20.10.16-dind
   variables:
     DOCKER_TLS_CERTDIR: ""  # Docker 클라이언트가 불필요한 TLS 보안 연결을 시도하지 않도록하는설정
+    DOCKER_HOST: tcp://docker:2375 # docker서비스 위치브리핑
   dependencies:
     - build-app
   before_script:
