@@ -1,16 +1,50 @@
-# Kafka Connector for Vehicle Data Pipeline
-# 목적: Kafka 토픽에서 차량 데이터를 받아서 MongoDB에 저장
+import os
+import json
+from kafka import KafkaConsumer
+from pymongo import MongoClient
+from dotenv import load_dotenv
 
-# TODO:
-# 1. 필요한 라이브러리 import (kafka-python, pymongo, json, os, dotenv)
-# 2. 환경변수 로드 (.env 파일에서 설정 읽기)
-# 3. Kafka Consumer 설정 (MSK 연결, SASL/SCRAM 인증)
-# 4. MongoDB 연결 설정
-# 5. 토픽별 데이터 처리 로직 구현
-# 6. 에러 처리 및 로깅 추가
-# 
-# 구독할 토픽:
-# - realtime-storage-data
-# - periodic-storage-data  
-# - event
-# - alerts
+# 환경변수 로드
+load_dotenv()
+
+class VehicleDataConnector:
+    def __init__(self):
+        # Kafka 연결 설정
+        self.kafka_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+        self.kafka_group_id = os.getenv('KAFKA_GROUP_ID')
+        
+        # MongoDB 연결 설정
+        self.mongo_uri = os.getenv('MONGO_URI')
+        self.mongo_db_name = os.getenv('MONGO_DB_NAME')
+        
+        # 토픽별 컬렉션 매핑
+        self.topic_collection_map = {
+            'realtime-storage-data': 'realtime_data',
+            'periodic-storage-data': 'periodic_data',
+            'event': 'events',
+            'alerts': 'alerts'
+        }
+    
+    def connect_to_kafka(self):
+        """Kafka에 연결"""
+        # TODO: Kafka Consumer 구현
+        pass
+    
+    def connect_to_mongodb(self):
+        """MongoDB에 연결"""
+        # TODO: MongoDB 연결 구현
+        pass
+    
+    def process_message(self, message):
+        """메시지 처리 및 MongoDB 저장"""
+        # TODO: 메시지 처리 로직 구현
+        pass
+    
+    def run(self):
+        """메인 실행 함수"""
+        # TODO: 전체 실행 로직 구현
+        pass
+
+if __name__ == "__main__":
+    connector = VehicleDataConnector()
+    connector.run()
