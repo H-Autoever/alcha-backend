@@ -74,16 +74,43 @@ class VehicleDataConnector:
 
         except Exception as e:
             print(f"메시지 처리 실패: {e}")
-            
+           
 
+    # Main 
     def run(self):
-        """메인 실행 함수"""
-        # TODO: 전체 실행 로직 구현
-        pass
+        try:
+            # Kafka 연결 및 구독, MongoDB 연결
+            self.connect_to_kafka()     
+            self.connect_to_mongodb()
 
-            print(f"데이터 저장 실패: {e}")
-            raise   # 오류 발생 시 상위로 전달
+            print("Vehicle Data Connector 시작...")
 
+            #메시지 처리 루프 (무한 루프로 메시지 대기)
+            for message in self.consumer:
+                # 각 메시지를 처리하여 MongoDB에 저장
+                self.process_message(message)
+
+        except KeyboardInterrupt:
+            # 사용자가 중단(Ctrl+C)한 경우
+            print("사용자에 의해 중단됨")
+
+        except Exception as e:
+            # 기타 오류 발생 시 
+            print(f"실행 중 오류 발생: {e}")
+
+        finally:
+            # 리소스 정리 (항상 실행됨)
+            if hasattr(self, 'consumer'):
+                # kafka Consumer 연결 종료 
+                self.consumer.close()
+            if hasattr(self, 'mongo_client'):
+                # MongoDB 연결 종료
+                self.mongo_client.close()
+            
+            print("Vehicle Data Connector 종료...")
+
+
+            
 if __name__ == "__main__":
     connector = VehicleDataConnector()
     connector.run()
