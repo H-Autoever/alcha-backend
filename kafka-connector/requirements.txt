@@ -1,7 +1,11 @@
 # Python Dependencies for Kafka Connector
 # 목적: 의존성 관리 
 
-# TODO: 필요한 패키지들 추가
-# - kafka-python: Kafka Consumer 구현
-# - pymongo: MongoDB 연결 및 데이터 저장
-# - python-dotenv: 환경변수 관리
+# Kafka Consumer 구현
+kafka-python==2.0.2
+
+# MongoDB 연결 및 데이터 저장
+pymongo==4.6.0
+
+# 환경변수 관리
+python-dotenv==1.0.0
