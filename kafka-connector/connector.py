@@ -29,7 +29,7 @@ class VehicleDataConnector:
     def connect_to_kafka(self):
         try:
             self.consumer = KafkaConsumer(
-                *self.topic_collection_map.keys(), # topic_collection_map의 키들을 개별 인자로 전달달
+                *self.topic_collection_map.keys(), # topic_collection_map의 키들을 개별 인자로 전달
                 bootstrap_servers=self.kafka_servers, # MSK 브로커 주소
                 group_id=self.kafka_group_id, # 컨슈머 그룹 ID
                 auto_offset_reset='latest'  # 새로운 메시지만 처리 
@@ -110,7 +110,7 @@ class VehicleDataConnector:
             print("Vehicle Data Connector 종료...")
 
 
-            
+
 if __name__ == "__main__":
     connector = VehicleDataConnector()
     connector.run()
