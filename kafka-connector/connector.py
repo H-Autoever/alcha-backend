@@ -44,7 +44,7 @@ class VehicleDataConnector:
     # MongoDB에 연결
     def connect_to_mongodb(self):
         try:
-            # MongoDB 클라이언트 생성성
+            # MongoDB 클라이언트 생성
             self.mongo_client = MongoClient(self.mongo_uri)
             # MongoDB 데이터베이스 선택
             self.db = self.mongo_client[self.mongo_db_name]
@@ -56,16 +56,33 @@ class VehicleDataConnector:
             raise   # 오류 발생 시 상위로 전달
 
 
-    
+    # 메시지 처리 및 MongoDB 저장
     def process_message(self, message):
-        """메시지 처리 및 MongoDB 저장"""
-        # TODO: 메시지 처리 로직 구현
-        pass
-    
+        try:
+            # 메시지에서 토픽 이름, 실제 데이터 추출
+            topic = message.topic
+            data = message.value
+
+            # 토픽에 해당하는 MongoDB 컬렉션 선택
+            collection_name = self.topic_collection_map[topic]
+            collection = self.db[collection_name]
+
+            # MongoDB에 데이터 저장 (단일 문서를 컬렉션에 삽입)
+            result = collection.insert_one(data)  
+            # 삽입된 문서의 고유 ID 출력
+            print(f"데이터 저장 완료: {topic} -> {collection_name}, ID: {result.inserted_id}")
+
+        except Exception as e:
+            print(f"메시지 처리 실패: {e}")
+            
+
     def run(self):
         """메인 실행 함수"""
         # TODO: 전체 실행 로직 구현
         pass
+
+            print(f"데이터 저장 실패: {e}")
+            raise   # 오류 발생 시 상위로 전달
 
 if __name__ == "__main__":
     connector = VehicleDataConnector()
