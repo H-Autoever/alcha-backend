@@ -25,9 +25,8 @@ class VehicleDataConnector:
             'alerts': 'alerts'
         }
     
-
+    # Kafka에 연결
     def connect_to_kafka(self):
-        """Kafka에 연결"""
         try:
             self.consumer = KafkaConsumer(
                 *self.topic_collection_map.keys(), # topic_collection_map의 키들을 개별 인자로 전달달
@@ -42,11 +41,21 @@ class VehicleDataConnector:
             print(f"Kafka 연결 실패: {e}")
             raise   # 오류 발생 시 상위로 전달
 
-
+    # MongoDB에 연결
     def connect_to_mongodb(self):
-        """MongoDB에 연결"""
-        # TODO: MongoDB 연결 구현
-        pass
+        try:
+            # MongoDB 클라이언트 생성성
+            self.mongo_client = MongoClient(self.mongo_uri)
+            # MongoDB 데이터베이스 선택
+            self.db = self.mongo_client[self.mongo_db_name]
+
+            print("MongoDB 연결 성공")
+        
+        except Exception as e:
+            print(f"MongoDB 연결 실패: {e}")
+            raise   # 오류 발생 시 상위로 전달
+
+
     
     def process_message(self, message):
         """메시지 처리 및 MongoDB 저장"""
