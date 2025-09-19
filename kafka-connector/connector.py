@@ -25,11 +25,24 @@ class VehicleDataConnector:
             'alerts': 'alerts'
         }
     
+
     def connect_to_kafka(self):
         """Kafka에 연결"""
-        # TODO: Kafka Consumer 구현
-        pass
-    
+        try:
+            self.consumer = KafkaConsumer(
+                *self.topic_collection_map.keys(), # topic_collection_map의 키들을 개별 인자로 전달달
+                bootstrap_servers=self.kafka_servers, # MSK 브로커 주소
+                group_id=self.kafka_group_id, # 컨슈머 그룹 ID
+                auto_offset_reset='latest'  # 새로운 메시지만 처리 
+            )
+
+            print("Kafka 연결 성공")
+
+        except Exception as e:
+            print(f"Kafka 연결 실패: {e}")
+            raise   # 오류 발생 시 상위로 전달
+
+
     def connect_to_mongodb(self):
         """MongoDB에 연결"""
         # TODO: MongoDB 연결 구현
