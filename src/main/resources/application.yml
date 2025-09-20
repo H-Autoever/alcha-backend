@@ -1,1 +1,6 @@
-spring.application.name=alcha-backend
+spring:
+  application:
+    name:
+      alcha-backend
+  kafka:
+    bootstrap-servers: localhost:9092
