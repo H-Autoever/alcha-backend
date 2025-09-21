@@ -33,7 +33,7 @@ public class AppDataConsumerService {
             groupId = "periodic-group",
             containerFactory = "periodicAppDataListenerContainerFactory"
     )
-    public void consumePeriodic(PeriodicAppDataMessage message) {
+    public void consumePeriodicMessage(PeriodicAppDataMessage message) {
         periodicAppDataCacheService.savePeriodicAppData(message);
 
         /* TODO: SSE 연결로 데이터 전송 */
