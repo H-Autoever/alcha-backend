@@ -12,13 +12,20 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AppDataConsumerService {
 
+    private final RealtimeAppDataCacheService realtimeAppDataCacheService;
+    private final PeriodicAppDataCacheService periodicAppDataCacheService;
+
     @KafkaListener(
             topics = "realtime-app-data",
             groupId = "realtime-group",
             containerFactory = "realtimeAppDataListenerContainerFactory"
     )
     public void consumeRealtimeMessage(RealtimeAppDataMessage message) {
-        log.info("Received Realtime message: {}", message);
+        realtimeAppDataCacheService.saveRealtimeAppData(message);
+
+        /* TODO: SSE 연결로 데이터 전송 */
+
+        /* TODO: 시나리오 검사 후 알림 전송 */
     }
 
     @KafkaListener(
@@ -26,7 +33,11 @@ public class AppDataConsumerService {
             groupId = "periodic-group",
             containerFactory = "periodicAppDataListenerContainerFactory"
     )
-    public void consumePeriodic(PeriodicAppDataMessage message) {
-        log.info("Received Periodic message: {}", message);
+    public void consumePeriodicMessage(PeriodicAppDataMessage message) {
+        periodicAppDataCacheService.savePeriodicAppData(message);
+
+        /* TODO: SSE 연결로 데이터 전송 */
+
+        /* TODO: 시나리오 검사 후 알림 전송 */
     }
 }
