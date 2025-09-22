@@ -1,0 +1,52 @@
+stages:
+  - build
+  - dockerize
+
+variables:
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+build-app:
+  stage: build
+  image: openjdk:21-jdk-slim
+  script:
+    - echo "Gradle build started..."
+    - chmod +x ./gradlew
+    - ./gradlew build --no-daemon -x test
+    - echo "Build finished."
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 hour
+  only:
+    - release
+    - feature/cicd-pipeline
+  tags:
+    - alcha # tag는 and 연산
+
+dockerize-and-push:
+  stage: dockerize
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""  # Docker 클라이언트가 불필요한 TLS 보안 연결을 시도하지 않도록하는설정
+    DOCKER_HOST: tcp://docker:2375 # docker서비스 위치브리핑
+  dependencies:
+    - build-app
+  before_script:
+    - apk add --no-cache python3 py3-pip
+    - pip install awscli
+    - echo "Logging in to AWS ECR..."
+    - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URL
+  script:
+    - echo "Building Docker image..."
+    - FULL_IMAGE_NAME="$ECR_REPOSITORY_URL:$IMAGE_TAG"
+    - docker build -t $FULL_IMAGE_NAME .
+    - echo "Pushing image to ECR..."
+    - docker push $FULL_IMAGE_NAME
+    - echo "Image push complete."
+  only:
+    - release
+    - feature/cicd-pipeline
+  tags:
+    - alcha # tag는 and 연산
