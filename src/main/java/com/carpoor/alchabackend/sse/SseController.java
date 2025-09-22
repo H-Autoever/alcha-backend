@@ -11,8 +11,8 @@ import org.springframework.http.MediaType;
 @RestController
 @CrossOrigin(origins = "*")
 public class SseController {
-    
-    // front와 연결할 엔드포인트
+
+    // front와 연결할 엔드 포인트
     @GetMapping(value = "/api/sse/{vehicleId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter connectSse(@PathVariable String vehicleId) {
         // SSE 연결 생성 (30분 타임아웃)
@@ -39,4 +39,3 @@ public class SseController {
         return emitter;
     }
 }
-

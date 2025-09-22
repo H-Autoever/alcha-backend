@@ -1,6 +1,9 @@
 spring:
   application:
     name: alcha-backend
+  # Kafka 설정 
+  kafka:
+    bootstrap-servers: localhost:9092
   # Redis 설정
   data:
     redis:
