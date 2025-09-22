@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE 연결 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .data {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .connect-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .disconnect-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>SSE 연결 테스트</h1>
+    
+    <div class="container">
+        <h2>연결 설정</h2>
+        <label for="vehicleId">차량 ID:</label>
+        <input type="text" id="vehicleId" value="test-vehicle-001" placeholder="차량 ID 입력">
+        <br><br>
+        <button class="connect-btn" onclick="connectSSE()">연결</button>
+        <button class="disconnect-btn" onclick="disconnectSSE()">연결 끊기</button>
+    </div>
+
+    <div class="container">
+        <h2>연결 상태</h2>
+        <div id="status" class="status disconnected">연결 안됨</div>
+    </div>
+
+    <div class="container">
+        <h2>받은 데이터</h2>
+        <div id="dataContainer">
+            <p>아직 데이터가 없습니다.</p>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        const statusDiv = document.getElementById('status');
+        const dataContainer = document.getElementById('dataContainer');
+
+        function connectSSE() {
+            const vehicleId = document.getElementById('vehicleId').value;
+            
+            if (!vehicleId) {
+                alert('차량 ID를 입력해주세요.');
+                return;
+            }
+
+            // 기존 연결이 있으면 끊기
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // SSE 연결 생성
+            const url = `http://localhost:8080/api/sse/${vehicleId}`;
+            eventSource = new EventSource(url);
+
+            // 연결 성공
+            eventSource.onopen = function(event) {
+                statusDiv.textContent = '연결됨';
+                statusDiv.className = 'status connected';
+                console.log('SSE 연결 성공:', event);
+            };
+
+            // 데이터 수신
+            eventSource.onmessage = function(event) {
+                // 기존 텍스트 제거 (첫 번째 데이터만)
+                if (dataContainer.querySelector('p')) {
+                    dataContainer.innerHTML = '';
+                }
+                
+                const dataDiv = document.createElement('div');
+                dataDiv.className = 'data';
+                dataDiv.innerHTML = `
+                    <strong>시간:</strong> ${new Date().toLocaleTimeString()}<br>
+                    <strong>데이터:</strong> ${event.data}
+                `;
+                dataContainer.appendChild(dataDiv);
+                console.log('데이터 수신:', event.data);
+            };
+
+            // 에러 발생
+            eventSource.onerror = function(event) {
+                statusDiv.textContent = '연결 에러';
+                statusDiv.className = 'status disconnected';
+                console.error('SSE 연결 에러:', event);
+            };
+        }
+
+        function disconnectSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                statusDiv.textContent = '연결 끊김';
+                statusDiv.className = 'status disconnected';
+                console.log('SSE 연결 끊김');
+            }
+        }
+
+        // 페이지 로드 시 자동 연결
+        window.onload = function() {
+            console.log('SSE 테스트 페이지 로드됨');
+        };
+    </script>
+</body>
+</html>
