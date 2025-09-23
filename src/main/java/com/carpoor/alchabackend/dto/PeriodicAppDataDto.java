@@ -1,5 +1,6 @@
 package com.carpoor.alchabackend.dto;
 
+import com.carpoor.alchabackend.message.PeriodicAppDataMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,4 +42,18 @@ public class PeriodicAppDataDto {
 
     @JsonProperty("tpms_rear_right")
     private Integer tpmsRearRight;
+
+    public PeriodicAppDataDto(PeriodicAppDataMessage message) {
+        this.vehicleId = message.getVehicleId();
+        this.locationLatitude = message.getLocationLatitude();
+        this.locationLongitude = message.getLocationLongitude();
+        this.temperatureCabin = message.getTemperatureCabin();
+        this.temperatureAmbient = message.getTemperatureAmbient();
+        this.batteryVoltage = message.getBatteryVoltage();
+        this.fuelLevel = message.getFuelLevel();
+        this.tpmsFrontLeft = message.getTpmsFrontLeft();
+        this.tpmsFrontRight = message.getTpmsFrontRight();
+        this.tpmsRearLeft = message.getTpmsRearLeft();
+        this.tpmsRearRight = message.getTpmsRearRight();
+    }
 }

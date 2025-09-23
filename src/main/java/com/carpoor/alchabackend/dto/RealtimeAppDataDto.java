@@ -1,5 +1,6 @@
 package com.carpoor.alchabackend.dto;
 
+import com.carpoor.alchabackend.message.RealtimeAppDataMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,4 +45,19 @@ public class RealtimeAppDataDto {
 
     @JsonProperty("ev_battery_soc")
     private Integer evBatterySoc;
+
+    public RealtimeAppDataDto(RealtimeAppDataMessage message) {
+        this.vehicleId = message.getVehicleId();
+        this.vehicleSpeed = message.getVehicleSpeed();
+        this.engineRpm = message.getEngineRpm();
+        this.engineStatusIgnition = message.getEngineStatusIgnition();
+        this.throttlePosition = message.getThrottlePosition();
+        this.gearPositionMode = message.getGearPositionMode();
+        this.gearPositionCurrentGear = message.getGearPositionCurrentGear();
+        this.engineTemp = message.getEngineTemp();
+        this.coolantTemp = message.getCoolantTemp();
+        this.evBatteryVoltage = message.getEvBatteryVoltage();
+        this.evBatteryCurrent = message.getEvBatteryCurrent();
+        this.evBatterySoc = message.getEvBatterySoc();
+    }
 }
