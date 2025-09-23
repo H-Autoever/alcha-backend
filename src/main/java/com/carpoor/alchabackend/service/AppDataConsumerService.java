@@ -2,6 +2,7 @@ package com.carpoor.alchabackend.service;
 
 import com.carpoor.alchabackend.message.PeriodicAppDataMessage;
 import com.carpoor.alchabackend.message.RealtimeAppDataMessage;
+import com.carpoor.alchabackend.sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -14,6 +15,7 @@ public class AppDataConsumerService {
 
     private final RealtimeAppDataCacheService realtimeAppDataCacheService;
     private final PeriodicAppDataCacheService periodicAppDataCacheService;
+    private final SseService sseService;
 
     @KafkaListener(
             topics = "realtime-app-data",
@@ -21,9 +23,10 @@ public class AppDataConsumerService {
             containerFactory = "realtimeAppDataListenerContainerFactory"
     )
     public void consumeRealtimeMessage(RealtimeAppDataMessage message) {
-        realtimeAppDataCacheService.saveRealtimeAppData(message);
 
-        /* TODO: SSE 연결로 데이터 전송 */
+        sseService.sendRealtimeData(message.getVehicleId(), message);
+
+        realtimeAppDataCacheService.saveRealtimeAppData(message);
 
         /* TODO: 시나리오 검사 후 알림 전송 */
     }
@@ -34,10 +37,11 @@ public class AppDataConsumerService {
             containerFactory = "periodicAppDataListenerContainerFactory"
     )
     public void consumePeriodicMessage(PeriodicAppDataMessage message) {
+
+        sseService.sendPeriodicData(message.getVehicleId(), message);
+
         periodicAppDataCacheService.savePeriodicAppData(message);
-
-        /* TODO: SSE 연결로 데이터 전송 */
-
+        
         /* TODO: 시나리오 검사 후 알림 전송 */
     }
 }
