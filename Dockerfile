@@ -13,7 +13,7 @@ COPY src ./src
 
 RUN ./gradlew build --no-daemon -x test
 
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
