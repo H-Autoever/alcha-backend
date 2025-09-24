@@ -1,12 +1,18 @@
+server:
+  port: ${ALCHA_BACKEND_PORT}
+
 spring:
   application:
     name: alcha-backend
+  config:
+    import:
+      - optional:file:.env[.properties]
   # Kafka 설정 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
   # Redis 설정
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       database: 0
