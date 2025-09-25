@@ -49,4 +49,7 @@ public class PeriodicAppDataMessage {
 
     @JsonProperty("fuel_level")
     private Integer fuelLevel;
+
+    @JsonProperty("timestamp")
+    private String timestamp;
 }
