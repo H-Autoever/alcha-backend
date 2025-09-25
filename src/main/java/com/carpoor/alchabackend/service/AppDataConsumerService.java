@@ -19,8 +19,7 @@ public class AppDataConsumerService {
 
     @KafkaListener(
             topics = "realtime-app-data",
-            groupId = "realtime-group",
-            containerFactory = "realtimeAppDataListenerContainerFactory"
+            groupId = "realtime-group"
     )
     public void consumeRealtimeMessage(RealtimeAppDataMessage message) {
 
@@ -33,15 +32,14 @@ public class AppDataConsumerService {
 
     @KafkaListener(
             topics = "periodic-app-data",
-            groupId = "periodic-group",
-            containerFactory = "periodicAppDataListenerContainerFactory"
+            groupId = "periodic-group"
     )
     public void consumePeriodicMessage(PeriodicAppDataMessage message) {
 
         sseService.sendPeriodicData(message.getVehicleId(), message);
 
         periodicAppDataCacheService.savePeriodicAppData(message);
-        
+
         /* TODO: 시나리오 검사 후 알림 전송 */
     }
 }
