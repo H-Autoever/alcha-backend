@@ -9,7 +9,25 @@ spring:
       - optional:file:.env[.properties]
   # Kafka 설정 
   kafka:
-    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    # MSK SCRAM + TLS
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: SCRAM-SHA-512
+      sasl.jaas.config: >
+        org.apache.kafka.common.security.scram.ScramLoginModule required
+        username="${KAFKA_SASL_USERNAME}" password="${KAFKA_SASL_PASSWORD}";
+
+    consumer:
+      enable-auto-commit: false
+      auto-offset-reset: latest
+      # 팩토리는 문자열로 받고, Java에서 컨버터로 객체 매핑 (가장 유연)
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 튜닝값(필요 시 조절)
+      max-poll-records: 500
+      fetch-max-bytes: 52428800
   # Redis 설정
   data:
     redis:

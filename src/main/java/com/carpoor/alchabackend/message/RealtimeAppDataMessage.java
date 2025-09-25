@@ -61,4 +61,7 @@ public class RealtimeAppDataMessage {
 
     @JsonProperty("ev_battery_soc")
     private Integer evBatterySoc;
+
+    @JsonProperty("timestamp")
+    private String timestamp;
 }
