@@ -20,6 +20,4 @@ WORKDIR /app
 # 파이프라인 수정, SNAPSHOT.jar 로 끝나는 파일만 복사하려고.
 COPY --from=builder /app/build/libs/*-SNAPSHOT.jar app.jar
 
-EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
