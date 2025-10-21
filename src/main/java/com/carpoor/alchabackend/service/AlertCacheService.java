@@ -6,9 +6,7 @@ import com.carpoor.alchabackend.dto.AlertType;
 import com.carpoor.alchabackend.sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,8 +30,8 @@ public class AlertCacheService {
                 .build();
         sseService.sendAlert(alertDto.getVehicleId(), alertDto);
 
-        String key = "vehicle:" + vehicleId + ":alert:ramp-parking";
-        redisTemplate.opsForValue().set(key, alertDto);
+        String key = "vehicle:" + vehicleId + ":alerts";
+        redisTemplate.opsForList().leftPush(key, alertDto);
 
         log.info("ramp parking alert 생성 성공: vehicleId={}, dto={}", vehicleId, alertDto);
 
@@ -62,8 +60,8 @@ public class AlertCacheService {
                 .build();
         sseService.sendAlert(alertDto.getVehicleId(), alertDto);
 
-        String key = "vehicle:" + vehicleId + ":alert:sudden-unintended-acceleration";
-        redisTemplate.opsForValue().set(key, alertDto);
+        String key = "vehicle:" + vehicleId + ":alerts";
+        redisTemplate.opsForList().leftPush(key, alertDto);
 
         log.info("sudden unintended acceleration alert 생성 성공: vehicleId={}, dto={}", vehicleId, alertDto);
 
@@ -78,33 +76,22 @@ public class AlertCacheService {
                 .build();
         sseService.sendAlert(alertDto.getVehicleId(), alertDto);
 
-        String key = "vehicle:" + vehicleId + ":alert:collision";
-        redisTemplate.opsForValue().set(key, alertDto);
+        String key = "vehicle:" + vehicleId + ":alerts";
+        redisTemplate.opsForList().leftPush(key, alertDto);
 
         log.info("collision alert 생성 성공: vehicleId={}, dto={}", vehicleId, alertDto);
     }
 
 
     public List<AlertDto> getAll(String vehicleId) {
-        String pattern = "vehicle:" + vehicleId + ":alert*";
+        String key = "vehicle:" + vehicleId + ":alerts";
+        List<Object> values = redisTemplate.opsForList().range(key, 0, -1);
+
         List<AlertDto> alerts = new ArrayList<>();
-
-        // SCAN을 이용해 패턴에 맞는 키 검색
-        Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
-                .getConnection()
-                .scan(ScanOptions.scanOptions().match(pattern).count(100).build());
-
-        while (cursor.hasNext()) {
-            String key = new String(cursor.next());
-            Object value = redisTemplate.opsForValue().get(key);
-
-            if (value instanceof AlertDto alertDto) {
-                alerts.add(alertDto);
+        if (values != null) {
+            for (Object v : values) {
+                if (v instanceof AlertDto alert) alerts.add(alert);
             }
-        }
-        try {
-            cursor.close();
-        } catch (Exception ignored) {
         }
         return alerts;
     }
