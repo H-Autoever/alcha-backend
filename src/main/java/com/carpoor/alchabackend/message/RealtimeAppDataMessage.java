@@ -38,15 +38,6 @@ public class RealtimeAppDataMessage {
     @JsonProperty("gear_position_current_gear")
     private Integer gearPositionCurrentGear;
 
-    @JsonProperty("gyro_yaw_rate")
-    private Double gyroYawRate;
-
-    @JsonProperty("gyro_pitch_rate")
-    private Double gyroPitchRate;
-
-    @JsonProperty("gyro_roll_rate")
-    private Double gyroRollRate;
-
     @JsonProperty("engine_temp")
     private Double engineTemp;
 

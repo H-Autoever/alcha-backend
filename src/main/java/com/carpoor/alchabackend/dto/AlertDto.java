@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class AlertDto {
     private String vehicleId;
     private AlertType alertType;
+    private AlertLevel alertLevel;
     private String message;
     private String timestamp;
 }

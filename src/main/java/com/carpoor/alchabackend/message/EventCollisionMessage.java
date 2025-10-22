@@ -1,13 +1,18 @@
 package com.carpoor.alchabackend.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class EventMessage {
+@NoArgsConstructor
+@AllArgsConstructor
+public class EventCollisionMessage {
     @JsonProperty("vehicle_id")
     private String vehicleId;
-    
-    @JsonProperty("timestamp")
+
+    private double damage;
+
     private String timestamp;
 }

@@ -1,6 +1,9 @@
 package com.carpoor.alchabackend.service;
 
-import com.carpoor.alchabackend.message.EventMessage;
+import com.carpoor.alchabackend.message.EventCollisionMessage;
+import com.carpoor.alchabackend.message.EventEngineStatusMessage;
+import com.carpoor.alchabackend.message.EventSuddenAccelerationMessage;
+import com.carpoor.alchabackend.message.EventWarningLightMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -14,26 +17,35 @@ public class EventConsumerService {
     private final AlertCacheService alertCacheService;
 
     @KafkaListener(
-            topics = "event-engine-off",
-            groupId = "event-group"
+            topics = "event-engine-status",
+            groupId = "event-status-group"
     )
-    public void consumeEngineOffEventMessage(EventMessage message) {
-        alertCacheService.checkRampParking(message.getVehicleId(), message.getTimestamp());
+    public void consumeEventEngineStatusMessage(EventEngineStatusMessage eventMessage) {
+        if (eventMessage.getEngineStatusIgnition().equals("OFF")) alertCacheService.checkRampParking(eventMessage);
     }
 
     @KafkaListener(
             topics = "event-sudden-acceleration",
-            groupId = "event-group"
+            groupId = "event-alert-group"
     )
-    public void consumeSuddenAccelerationEventMessage(EventMessage message) {
-        alertCacheService.checkSuddenUnintendedAcceleration(message.getVehicleId(), message.getTimestamp());
+    public void consumeEventSuddenAccelerationMessage(EventSuddenAccelerationMessage eventMessage) {
+        alertCacheService.checkSuddenUnintendedAcceleration(eventMessage);
     }
 
     @KafkaListener(
             topics = "event-collision",
-            groupId = "event-group"
+            groupId = "event-alert-group"
     )
-    public void consumeCollisionEventMessage(EventMessage message) {
-        alertCacheService.checkCollision(message.getVehicleId(), message.getTimestamp());
+    public void consumeEventCollisionMessage(EventCollisionMessage eventMessage) {
+        alertCacheService.sendCollisionAlert(eventMessage);
     }
+
+    @KafkaListener(
+            topics = "event-warning-light",
+            groupId = "event-alert-group"
+    )
+    public void consumeEventWarningLightMessage(EventWarningLightMessage eventMessage) {
+        alertCacheService.sendWarningLightAlert(eventMessage);
+    }
+
 }
