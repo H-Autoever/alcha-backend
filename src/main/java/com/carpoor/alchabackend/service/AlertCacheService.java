@@ -4,37 +4,31 @@ package com.carpoor.alchabackend.service;
 import com.carpoor.alchabackend.dto.AlertDto;
 import com.carpoor.alchabackend.dto.AlertLevel;
 import com.carpoor.alchabackend.dto.AlertType;
-import com.carpoor.alchabackend.message.EventCollisionMessage;
-import com.carpoor.alchabackend.message.EventEngineStatusMessage;
-import com.carpoor.alchabackend.message.EventSuddenAccelerationMessage;
-import com.carpoor.alchabackend.message.EventWarningLightMessage;
+import com.carpoor.alchabackend.message.*;
 import com.carpoor.alchabackend.sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AlertCacheService {
     private final SseService sseService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, AlertDto> redisTemplate;
+    private final RedisTemplate<String, RealtimeAppDataMessage> realtimeTemplate;
 
     public List<AlertDto> getAll(String vehicleId) {
         String key = "vehicle:" + vehicleId + ":alerts";
-        List<Object> values = redisTemplate.opsForList().range(key, 0, -1);
+        return redisTemplate.opsForList().range(key, 0, -1);
 
-        List<AlertDto> alerts = new ArrayList<>();
-        if (values != null) {
-            for (Object v : values) {
-                if (v instanceof AlertDto alert) alerts.add(alert);
-            }
-        }
-        return alerts;
     }
 
     void checkRampParking(EventEngineStatusMessage eventMessage) {
@@ -60,17 +54,70 @@ public class AlertCacheService {
 
     }
 
-    void checkHighTemperature(String vehicleId, String timestamp) {
-        // TODO: 특정 온도 이상 올라가면, 주차 상태 확인, 알람 보냈었는지 확인 후 전송
+    void checkHighTemperature(String vehicleId, double curTemperature, String timestamp) {
 
-//        AlertDto alertDto = AlertDto.builder()
-//                .vehicleId("CAR-001")
-//                .alertType(AlertType.HIGH_TEMPERATURE)
-//                .message("엔진이 과열되었습니다.")
-//                .timestamp("2025-10-20T10:15:00Z")
-//                .build();
-//        sseService.sendAlert(alertDto.getVehicleId(), alertDto);
+        if (curTemperature < 40) {
+            return;
+        }
+
+        // 주차 상태 확인
+        String key = "vehicle:" + vehicleId + ":realtime";
+        RealtimeAppDataMessage value = realtimeTemplate.opsForValue().get(key);
+        if (Objects.requireNonNull(value).getEngineStatusIgnition().equals("ON")) {
+            return;
+        }
+
+        // 알림 보냈었는지 확인
+        AlertDto alert = getLatestHighTemperatureAlert(vehicleId);
+        if (alert == null) {
+            return;
+        } else {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime alertTime = LocalDateTime.parse(alert.getTimestamp(), formatter);
+
+            // 2️⃣ 현재 시각
+            LocalDateTime now = LocalDateTime.now();
+
+            // 3️⃣ 시간 차 계산
+            Duration diff = Duration.between(alertTime, now);
+
+            // 4️⃣ 30분(=1800초) 이내
+            if (diff.toMinutes() < 30) return;
+        }
+
+        //알림 생성
+        AlertDto alertDto = new AlertDto(vehicleId,
+                AlertType.SUDDEN_UNINTENDED_ACCELERATION,
+                AlertLevel.WARNING,
+                "차량 내부 온도가 " + curTemperature + "°C 입니다. 전자기기, 위험물 등이 있는지 확인하세요.\n",
+                timestamp);
+
+        saveAlert(alertDto);
+
+        sseService.sendAlert(alertDto);
+
+        log.info("high temperature alert 생성 성공: dto={}", alertDto);
     }
+
+    public AlertDto getLatestHighTemperatureAlert(String vehicleId) {
+        String key = "vehicle:" + vehicleId + ":alerts";
+
+        // 최근 몇 개만 우선 확인 (너무 크면 성능 저하 방지)
+        List<AlertDto> recentAlerts = redisTemplate.opsForList().range(key, 0, 50);
+        if (recentAlerts == null || recentAlerts.isEmpty()) {
+            return null;
+        }
+
+        // 가장 최근부터 순회하면서 HIGH_TEMPERATURE 찾기
+        for (AlertDto alert : recentAlerts) {
+            if (alert.getAlertType() == AlertType.HIGH_TEMPERATURE) {
+                return alert;  // 첫 번째로 발견된 것 = 가장 최근
+            }
+        }
+
+        return null; // 없을 경우
+    }
+
 
     void checkSuddenUnintendedAcceleration(EventSuddenAccelerationMessage eventMessage) {
         // TODO: 쓰로틀 0일 때 급발진 의심

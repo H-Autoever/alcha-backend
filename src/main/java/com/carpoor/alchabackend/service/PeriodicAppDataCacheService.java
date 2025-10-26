@@ -11,10 +11,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PeriodicAppDataCacheService {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final AlertCacheService alertCacheService;
 
     public void savePeriodicAppData(PeriodicAppDataMessage message) {
         String key = "vehicle:" + message.getVehicleId() + ":periodic";
         redisTemplate.opsForValue().set(key, message);
+
+        alertCacheService.checkHighTemperature(message.getVehicleId(), message.getTemperatureCabin(), message.getTimestamp());
     }
 
     public PeriodicAppDataMessage getPeriodicAppData(String vehicleId) {
