@@ -9,6 +9,7 @@ import com.carpoor.alchabackend.sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -54,6 +55,7 @@ public class AlertCacheService {
 
     }
 
+    @Async
     void checkHighTemperature(String vehicleId, double curTemperature, String timestamp) {
 
         if (curTemperature < 40) {
