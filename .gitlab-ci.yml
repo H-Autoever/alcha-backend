@@ -50,3 +50,4 @@ dockerize-and-push:
     - feature/cicd-pipeline
   tags:
     - alcha # tag는 and 연산
+  # test commit 25.10.18 11:26
