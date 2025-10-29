@@ -9,6 +9,7 @@ import com.carpoor.alchabackend.sse.SseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,129 +23,134 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class AlertCacheService {
-    private final SseService sseService;
-    private final RedisTemplate<String, AlertDto> redisTemplate;
-    private final RedisTemplate<String, RealtimeAppDataMessage> realtimeTemplate;
 
+    private final SseService sseService;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * 특정 차량의 모든 알림 조회
+     */
     public List<AlertDto> getAll(String vehicleId) {
         String key = "vehicle:" + vehicleId + ":alerts";
-        return redisTemplate.opsForList().range(key, 0, -1);
-
+        List<Object> objects = redisTemplate.opsForList().range(key, 0, -1);
+        if (objects == null) return List.of();
+        return objects.stream()
+                .filter(o -> o instanceof AlertDto)
+                .map(o -> (AlertDto) o)
+                .toList();
     }
 
+    /**
+     * 경사로 주차 감지
+     */
     void checkRampParking(EventEngineStatusMessage eventMessage) {
 
-        if (!("N".equalsIgnoreCase(eventMessage.getGearPositionMode()) && "OFF".equalsIgnoreCase(eventMessage.getSideBrakeStatus())))
+        if (!("N".equalsIgnoreCase(eventMessage.getGearPositionMode()) &&
+                "OFF".equalsIgnoreCase(eventMessage.getSideBrakeStatus())))
             return;
-        if (eventMessage.getInclinationSensor() < 2.0) return;
 
+        if (eventMessage.getInclinationSensor() < 2.0)
+            return;
 
         String message = "경사로에 주차중입니다. 차가 밀릴 위험이 있습니다.";
 
-        AlertDto alertDto = new AlertDto(eventMessage.getVehicleId(),
+        AlertDto alertDto = new AlertDto(
+                eventMessage.getVehicleId(),
                 AlertType.RAMP_PARKING,
                 AlertLevel.CAUTION,
                 message,
-                eventMessage.getTimestamp());
+                eventMessage.getTimestamp()
+        );
 
         sseService.sendAlert(alertDto);
-
         saveAlert(alertDto);
 
         log.info("ramp parking alert 생성 성공: dto={}", alertDto);
-
     }
 
+    /**
+     * 차량 내부 온도 경고
+     */
     @Async
     void checkHighTemperature(String vehicleId, double curTemperature, String timestamp) {
 
-        if (curTemperature < 40) {
-            return;
-        }
+        if (curTemperature < 40) return;
 
         // 주차 상태 확인
         String key = "vehicle:" + vehicleId + ":realtime";
-        RealtimeAppDataMessage value = realtimeTemplate.opsForValue().get(key);
-        if (Objects.requireNonNull(value).getEngineStatusIgnition().equals("ON")) {
-            return;
-        }
+        ValueOperations<String, Object> ops = redisTemplate.opsForValue();
+        Object value = ops.get(key);
+        if (!(value instanceof RealtimeAppDataMessage realtime)) return;
+        if ("ON".equalsIgnoreCase(realtime.getEngineStatusIgnition())) return;
 
-        // 알림 보냈었는지 확인
+        // 최근 알림 확인
         AlertDto alert = getLatestHighTemperatureAlert(vehicleId);
-        if (alert == null) {
-            return;
-        } else {
+        if (alert != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             LocalDateTime alertTime = LocalDateTime.parse(alert.getTimestamp(), formatter);
-
-            // 2️⃣ 현재 시각
             LocalDateTime now = LocalDateTime.now();
 
-            // 3️⃣ 시간 차 계산
             Duration diff = Duration.between(alertTime, now);
-
-            // 4️⃣ 30분(=1800초) 이내
             if (diff.toMinutes() < 30) return;
         }
 
-        //알림 생성
-        AlertDto alertDto = new AlertDto(vehicleId,
-                AlertType.SUDDEN_UNINTENDED_ACCELERATION,
+        AlertDto alertDto = new AlertDto(
+                vehicleId,
+                AlertType.HIGH_TEMPERATURE,
                 AlertLevel.WARNING,
                 "차량 내부 온도가 " + curTemperature + "°C 입니다. 전자기기, 위험물 등이 있는지 확인하세요.\n",
-                timestamp);
+                timestamp
+        );
 
         saveAlert(alertDto);
-
         sseService.sendAlert(alertDto);
-
         log.info("high temperature alert 생성 성공: dto={}", alertDto);
     }
 
+    /**
+     * 최근 HIGH_TEMPERATURE 알림 가져오기
+     */
     public AlertDto getLatestHighTemperatureAlert(String vehicleId) {
         String key = "vehicle:" + vehicleId + ":alerts";
+        List<Object> recentObjects = redisTemplate.opsForList().range(key, 0, 50);
+        if (recentObjects == null || recentObjects.isEmpty()) return null;
 
-        // 최근 몇 개만 우선 확인 (너무 크면 성능 저하 방지)
-        List<AlertDto> recentAlerts = redisTemplate.opsForList().range(key, 0, 50);
-        if (recentAlerts == null || recentAlerts.isEmpty()) {
-            return null;
-        }
-
-        // 가장 최근부터 순회하면서 HIGH_TEMPERATURE 찾기
-        for (AlertDto alert : recentAlerts) {
-            if (alert.getAlertType() == AlertType.HIGH_TEMPERATURE) {
-                return alert;  // 첫 번째로 발견된 것 = 가장 최근
+        for (Object obj : recentObjects) {
+            if (obj instanceof AlertDto alert &&
+                    alert.getAlertType() == AlertType.HIGH_TEMPERATURE) {
+                return alert;
             }
         }
-
-        return null; // 없을 경우
+        return null;
     }
 
-
+    /**
+     * 급발진 경고
+     */
     void checkSuddenUnintendedAcceleration(EventSuddenAccelerationMessage eventMessage) {
-        // TODO: 쓰로틀 0일 때 급발진 의심
         if (eventMessage.getThrottlePosition() > 5) return;
 
-        AlertDto alertDto = new AlertDto(eventMessage.getVehicleId(),
+        AlertDto alertDto = new AlertDto(
+                eventMessage.getVehicleId(),
                 AlertType.SUDDEN_UNINTENDED_ACCELERATION,
                 AlertLevel.DANGER,
                 "급발진이 의심됩니다.",
-                eventMessage.getTimestamp());
+                eventMessage.getTimestamp()
+        );
 
         saveAlert(alertDto);
-
         sseService.sendAlert(alertDto);
-
         log.info("sudden unintended acceleration alert 생성 성공: dto={}", alertDto);
-
     }
 
+    /**
+     * 경고등 알림
+     */
     void sendWarningLightAlert(EventWarningLightMessage eventMessage) {
         String type = eventMessage.getType();
         AlertType alertType;
         String message;
 
-        // ----- type 값에 따른 AlertType 및 메시지 매핑 -----
         switch (type) {
             case "engine_oil_check" -> {
                 alertType = AlertType.ENGINE_OIL_CHECK;
@@ -174,12 +180,13 @@ public class AlertCacheService {
         );
 
         saveAlert(alertDto);
-
         sseService.sendAlert(alertDto);
-
         log.info("warning light alert 생성 성공: dto={}", alertDto);
     }
 
+    /**
+     * 충돌 경고
+     */
     void sendCollisionAlert(EventCollisionMessage eventMessage) {
         double damage = eventMessage.getDamage();
         AlertLevel alertLevel;
@@ -205,12 +212,13 @@ public class AlertCacheService {
         );
 
         saveAlert(alertDto);
-
         sseService.sendAlert(alertDto);
-
         log.info("collision alert 생성 성공: dto={}", alertDto);
     }
 
+    /**
+     * Redis에 알림 저장
+     */
     void saveAlert(AlertDto alertDto) {
         redisTemplate.opsForList().leftPush("vehicle:" + alertDto.getVehicleId() + ":alerts", alertDto);
     }
