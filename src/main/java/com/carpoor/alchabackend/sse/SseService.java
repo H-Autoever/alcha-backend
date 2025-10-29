@@ -1,5 +1,6 @@
 package com.carpoor.alchabackend.sse;
 
+import com.carpoor.alchabackend.dto.AlertDto;
 import com.carpoor.alchabackend.dto.PeriodicAppDataDto;
 import com.carpoor.alchabackend.dto.RealtimeAppDataDto;
 import com.carpoor.alchabackend.message.PeriodicAppDataMessage;
@@ -90,5 +91,19 @@ public class SseService {
         }
     }
 
+    public void sendAlert(AlertDto alertDto) {
+        List<SseEmitter> list = emitters.get(alertDto.getVehicleId());
+        if (list != null) {
+            for (SseEmitter emitter : list) {
+                try {
+                    emitter.send(SseEmitter.event().name("alert_data").data(alertDto));
+                    log.info("alert 전송 성공: vehicleId={}, dto={}", alertDto.getVehicleId(), alertDto);
+                } catch (Exception e) {
+                    log.error("ramp_alert 전송 실패: vehicleId={}, error={}", alertDto.getVehicleId(), e.getMessage());
+                    removeEmitter(alertDto.getVehicleId(), emitter);
+                }
+            }
+        }
+    }
 
 }
