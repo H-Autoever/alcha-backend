@@ -21,11 +21,12 @@ public class EventConsumerService {
             groupId = "event-status-group"
     )
     public void consumeEventEngineStatusMessage(EventEngineStatusMessage eventMessage) {
+        log.info("engine status event 수신: dto={}", eventMessage);
         if (eventMessage.getEngineStatusIgnition().equals("OFF")) alertCacheService.checkRampParking(eventMessage);
     }
 
     @KafkaListener(
-            topics = "event-sudden-acceleration",
+            topics = "event-suddenacc",
             groupId = "event-alert-group"
     )
     public void consumeEventSuddenAccelerationMessage(EventSuddenAccelerationMessage eventMessage) {
