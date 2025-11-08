@@ -44,15 +44,6 @@ public class RealtimeAppDataMessage {
     @JsonProperty("coolant_temp")
     private Double coolantTemp;
 
-    @JsonProperty("ev_battery_voltage")
-    private Double evBatteryVoltage;
-
-    @JsonProperty("ev_battery_current")
-    private Double evBatteryCurrent;
-
-    @JsonProperty("ev_battery_soc")
-    private Integer evBatterySoc;
-
     @JsonProperty("timestamp")
     private String timestamp;
 }

@@ -37,15 +37,6 @@ public class RealtimeAppDataDto {
     @JsonProperty("coolant_temp")
     private Double coolantTemp;
 
-    @JsonProperty("ev_battery_voltage")
-    private Double evBatteryVoltage;
-
-    @JsonProperty("ev_battery_current")
-    private Double evBatteryCurrent;
-
-    @JsonProperty("ev_battery_soc")
-    private Integer evBatterySoc;
-
     public RealtimeAppDataDto(RealtimeAppDataMessage message) {
         this.vehicleId = message.getVehicleId();
         this.vehicleSpeed = message.getVehicleSpeed();
@@ -56,8 +47,5 @@ public class RealtimeAppDataDto {
         this.gearPositionCurrentGear = message.getGearPositionCurrentGear();
         this.engineTemp = message.getEngineTemp();
         this.coolantTemp = message.getCoolantTemp();
-        this.evBatteryVoltage = message.getEvBatteryVoltage();
-        this.evBatteryCurrent = message.getEvBatteryCurrent();
-        this.evBatterySoc = message.getEvBatterySoc();
     }
 }
